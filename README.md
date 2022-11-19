@@ -16,11 +16,12 @@
 
 ```
 用法：
-    python3 xddailyup.py [参数]
+    python3 %s [参数]
 参数：
     -h,--help                   输出帮助信息
     -u,--username <学号>        指定学号
     -p,--password <密码>        指定密码
+    -a,--action <功能>          指定功能（1：登录，0：注销，默认为1）
     -d,--debug                  进入调试模式
 ```
 
