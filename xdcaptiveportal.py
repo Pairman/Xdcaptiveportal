@@ -17,11 +17,12 @@
 
 ```
 用法：
-    python3 xddailyup.py [参数]
+    python3 %s [参数]
 参数：
     -h,--help                   输出帮助信息
     -u,--username <学号>        指定学号
     -p,--password <密码>        指定密码
+    -a,--action <功能>          指定功能（1：登录，0：注销，默认为1）
     -d,--debug                  进入调试模式
 ```
 
@@ -42,13 +43,14 @@ GNU General Public License v3.0 (gpl-3.0)
 
 from getopt import getopt
 from requests import Session
+from socket import getfqdn,gethostbyname,gethostname
 from sys import argv
 
-opts=getopt(argv[1:],"hu:p:d",["help","username=","password=","debug"])[0]
+opts=getopt(argv[1:],"hu:p:a:d",["help","username=","password=","action=","debug"])[0]
 
-USERNAME,PASSWORD,DEBUG="","",False
+USERNAME,PASSWORD,ACTION,DEBUG="","",1,False
 
-helpMsg="""Xdcaptiveportal - 西安电子科技大学校园网登录工具 1.0 (2022 Nov 7, Pairman)
+helpMsg="""Xdcaptiveportal - 西安电子科技大学校园网登录工具 1.1 (2022 Nov 19, Pairman)
 本程序仅供学习交流使用，使用本程序造成的任何后果由用户自行负责。
 用法：
     python3 %s [参数]
@@ -56,6 +58,7 @@ helpMsg="""Xdcaptiveportal - 西安电子科技大学校园网登录工具 1.0 (
     -h,--help                   输出帮助信息
     -u,--username <学号>        指定学号
     -p,--password <密码>        指定密码
+    -a,--action <功能>          指定功能（1：登录，0：注销，默认为1）
     -d,--debug                  进入调试模式
 """%(argv[0])
 
@@ -71,6 +74,8 @@ for opt,arg in opts:
         USERNAME=arg
     if opt in ("-p","--password"):
         PASSWORD=arg
+    if opt in ("-a","-action"):
+        ACTION=arg
     if opt in ("-d","--debug"):
         DEBUG=1
 
@@ -83,7 +88,14 @@ if PASSWORD=="":
     print("请指定密码！")
     exit()
 
-currentUploadMsg={
+logoutUploadMsg={
+    "action":"auto_logout",
+    "info":"",
+    "user_ip":gethostbyname(getfqdn(gethostname())),
+    "username":USERNAME
+}
+
+loginUploadMsg={
     "action":"login",
     "ac_id":"8",
     "user_ip":"",
@@ -95,13 +107,14 @@ currentUploadMsg={
     "save_me":"1"
 }
 
+currentUploadMsg=[logoutUploadMsg,loginUploadMsg][ACTION]
+
 conn=Session()
 logined=False
 for i in range(3):
     result=None
     try :
         result=conn.post(url="https://w.xidian.edu.cn/srun_portal_pc.php",data=currentUploadMsg,verify=not DEBUG)
-        # if result.json()['e']==0:
         if result.status_code==200:
             logined=True
             print("登录成功")
